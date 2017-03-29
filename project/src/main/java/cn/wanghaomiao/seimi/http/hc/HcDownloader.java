@@ -124,13 +124,22 @@ public class HcDownloader implements SeimiDownloader {
             if (referer!=null){
                 seimiResponse.setReferer(referer.getValue());
             }
-            String contentTypeStr = entity.getContentType().getValue().toLowerCase();
+            String contentTypeStr = "";
+            if (entity.getContentType() == null) {
+                contentTypeStr = "json";
+            }else{
+                contentTypeStr = entity.getContentType().getValue().toLowerCase();
+            }
+
             if (contentTypeStr.contains("text")||contentTypeStr.contains("json")||contentTypeStr.contains("ajax")){
                 seimiResponse.setBodyType(BodyType.TEXT);
                 try {
                     seimiResponse.setData(EntityUtils.toByteArray(entity));
                     ContentType contentType = ContentType.get(entity);
-                    Charset charset = contentType.getCharset();
+                    Charset charset = null;
+                    if (contentType != null) {
+                        charset = contentType.getCharset();
+                    }
                     if (charset==null){
                         seimiResponse.setContent(new String(seimiResponse.getData(),"ISO-8859-1"));
                         String docCharset = renderRealCharset(seimiResponse);
@@ -141,6 +150,7 @@ public class HcDownloader implements SeimiDownloader {
                         seimiResponse.setCharset(charset.name());
                     }
                 } catch (Exception e) {
+                    e.printStackTrace();
                     logger.error("no content data");
                 }
             }else {
